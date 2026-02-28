@@ -1,0 +1,838 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gioco di decisioni - Quiz</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:#0f1b33;
+      --text:#e9eefc;
+      --muted:#a7b3d6;
+      --accent:#7aa2ff;
+      --good:#35d07f;
+      --bad:#ff5c7a;
+      --warn:#ffd36a;
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(1200px 600px at 20% 10%, rgba(122,162,255,.18), transparent 60%),
+                  radial-gradient(900px 500px at 90% 40%, rgba(53,208,127,.12), transparent 55%),
+                  radial-gradient(900px 500px at 40% 90%, rgba(255,92,122,.10), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:22px;
+
+      /* 👇 un filino più grande */
+      font-size: 17px;
+    }
+    .app{width:min(920px, 100%);}
+
+    header{
+      display:flex;
+      gap:14px;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:14px;
+    }
+    .pill{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      padding:10px 14px;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:999px;
+      backdrop-filter: blur(10px);
+    }
+    .pill strong{font-weight:750}
+    .pill small{color:var(--muted)}
+    .progress{
+      color:var(--muted);
+      font-size:15px; /* 👈 +1 */
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+    }
+
+    .card{
+      position:relative;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card-inner{padding:22px;}
+    h1{
+      margin:0 0 12px;
+      font-size: clamp(24px, 3.2vw, 32px); /* 👈 leggermente più grande */
+      letter-spacing:-.02em;
+    }
+    .intro{
+      white-space:pre-wrap;
+      line-height:1.45;
+      color:var(--text);
+      margin:0;
+      font-size:17px; /* 👈 +1 */
+    }
+    .qtext{
+      white-space:pre-wrap;
+      line-height:1.45;
+      margin:0 0 14px;
+      font-size:19px; /* 👈 +1 */
+    }
+    .sub{
+      color:var(--muted);
+      font-size:15px; /* 👈 +1 */
+      margin:0 0 10px;
+    }
+
+    .choices{
+      display:grid;
+      gap:10px;
+      margin-top:14px;
+    }
+    button.choice{
+      text-align:left;
+      width:100%;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(15,27,51,.55);
+      color:var(--text);
+      border-radius: 14px;
+      padding:14px 14px;
+      cursor:pointer;
+      transition: transform .08s ease, background .2s ease, border-color .2s ease;
+
+      /* 👇 un filino più grande */
+      font-size:16px;
+      line-height:1.35;
+      white-space:pre-wrap;
+    }
+    button.choice:hover{transform: translateY(-1px); border-color: rgba(122,162,255,.35); background: rgba(15,27,51,.75);}
+    button.choice:disabled{opacity:.55; cursor:not-allowed; transform:none;}
+
+    .footer{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      margin-top:16px;
+      flex-wrap:wrap;
+    }
+    .result{
+      flex:1;
+      min-width: 260px;
+      border-radius: 14px;
+      padding:12px 14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      color:var(--text);
+      white-space:pre-wrap;
+      line-height:1.35;
+      display:none;
+
+      /* 👇 un filino più grande */
+      font-size:16px;
+    }
+    .result.good{border-color: rgba(53,208,127,.30); background: rgba(53,208,127,.08);}
+    .result.bad{border-color: rgba(255,92,122,.30); background: rgba(255,92,122,.08);}
+    .result.warn{border-color: rgba(255,211,106,.30); background: rgba(255,211,106,.08);}
+
+    .actions{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:flex-end;
+    }
+    .btn{
+      border-radius: 14px;
+      padding:12px 14px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      cursor:pointer;
+      transition: transform .08s ease, background .2s ease, border-color .2s ease;
+      font-weight:650;
+
+      /* 👇 un filino più grande */
+      font-size:16px;
+    }
+    .btn:hover{transform: translateY(-1px); border-color: rgba(122,162,255,.35); background: rgba(255,255,255,.10);}
+    .btn:disabled{opacity:.55; cursor:not-allowed; transform:none;}
+    .btn.primary{background: rgba(122,162,255,.18); border-color: rgba(122,162,255,.35);}
+
+    /* Win/Lose micro-animations */
+    .fx{
+      pointer-events:none;
+      position:absolute;
+      inset:0;
+      opacity:0;
+      transform: scale(1.02);
+    }
+    .fx.good{
+      background: radial-gradient(600px 220px at 50% 0%, rgba(53,208,127,.35), transparent 70%);
+    }
+    .fx.bad{
+      background: radial-gradient(600px 220px at 50% 0%, rgba(255,92,122,.35), transparent 70%);
+    }
+    .card.flash-good .fx.good,
+    .card.flash-bad .fx.bad{
+      animation: flash .55s ease-out;
+    }
+    @keyframes flash{
+      0%{opacity:0; transform:scale(1.02)}
+      25%{opacity:1; transform:scale(1.00)}
+      100%{opacity:0; transform:scale(1.02)}
+    }
+    .card.shake{
+      animation: shake .40s ease-in-out;
+    }
+    @keyframes shake{
+      0%{transform:translateX(0)}
+      20%{transform:translateX(-8px)}
+      40%{transform:translateX(7px)}
+      60%{transform:translateX(-6px)}
+      80%{transform:translateX(4px)}
+      100%{transform:translateX(0)}
+    }
+
+    /* Tiny “confetti” dots */
+    .confetti{
+      pointer-events:none;
+      position:absolute;
+      inset:0;
+      overflow:hidden;
+    }
+    .dot{
+      position:absolute;
+      width:8px;height:8px;border-radius:999px;
+      opacity:0;
+    }
+    .card.pop .dot{
+      animation: pop 650ms ease-out;
+    }
+    @keyframes pop{
+      0%{transform:translateY(0) scale(.6); opacity:0}
+      20%{opacity:1}
+      100%{transform:translateY(180px) scale(1.0); opacity:0}
+    }
+
+    .end{
+      display:none;
+      text-align:center;
+      padding:26px 10px 6px;
+    }
+    .score{
+      font-size: clamp(30px, 4.2vw, 46px); /* 👈 leggermente più grande */
+      font-weight:850;
+      margin:10px 0 0;
+      letter-spacing:-.02em;
+    }
+    .hint{color:var(--muted); margin:6px 0 0; font-size:15px} /* 👈 +1 */
+    .hr{
+      height:1px; background: rgba(255,255,255,.10);
+      margin:16px 0;
+    }
+
+    @media (max-width:520px){
+      .pill{flex:1}
+      header{flex-direction:column; align-items:stretch}
+      .actions{width:100%; justify-content:stretch}
+      .btn{flex:1}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="pill" aria-live="polite">
+        <small>Saldo</small>
+        <strong id="saldoLabel">€ 0</strong>
+      </div>
+      <div class="progress" id="progressLabel">Intro</div>
+    </header>
+
+    <section class="card" id="card">
+      <div class="fx good"></div>
+      <div class="fx bad"></div>
+
+      <div class="confetti" id="confetti"></div>
+
+      <!-- ✅ NUOVA SCHERMATA ANAGRAFICA -->
+      <div class="card-inner" id="screenDemo">
+        <h1>Prima di iniziare</h1>
+        <p class="intro">Rispondi a queste domande iniziali.</p>
+
+        <div class="choices" style="margin-top:16px;">
+          <div>
+            <p class="sub" style="margin:0 0 8px;">Qual è il tuo genere:</p>
+            <div class="choices" style="margin-top:0;">
+              <button class="choice" type="button" data-demo="gender" data-value="Maschio">a) Maschio</button>
+              <button class="choice" type="button" data-demo="gender" data-value="Femmina">b) Femmina</button>
+            </div>
+          </div>
+
+          <div>
+            <p class="sub" style="margin:8px 0 8px;">La tua età:</p>
+            <div class="choices" style="margin-top:0;">
+              <button class="choice" type="button" data-demo="age" data-value="0-18">a) 0-18</button>
+              <button class="choice" type="button" data-demo="age" data-value="18-30">b) 18-30</button>
+              <button class="choice" type="button" data-demo="age" data-value="30-60">c) 30-60</button>
+              <button class="choice" type="button" data-demo="age" data-value="60+">d) 60+</button>
+            </div>
+          </div>
+
+          <div>
+            <p class="sub" style="margin:8px 0 8px;">Titolo di studio:</p>
+            <div class="choices" style="margin-top:0;">
+              <button class="choice" type="button" data-demo="edu" data-value="Nessuno">a) Nessuno</button>
+              <button class="choice" type="button" data-demo="edu" data-value="Titolo di terza media">b) Titolo di terza media</button>
+              <button class="choice" type="button" data-demo="edu" data-value="Diploma">c) Diploma</button>
+              <button class="choice" type="button" data-demo="edu" data-value="Laurea o altri titoli più elevati">d) Laurea o altri titoli più elevati</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer" style="margin-top:18px;">
+          <div class="result warn" id="demoHint" style="display:block;">
+            Seleziona una risposta per ogni domanda per continuare.
+          </div>
+          <div class="actions">
+            <button class="btn primary" id="demoNextBtn" disabled>Continua</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-inner" id="screenIntro" style="display:none;">
+        <h1>Gioco di decisioni</h1>
+        <p class="intro" id="introText"></p>
+
+        <div class="footer" style="margin-top:18px;">
+          <div class="result warn" style="display:block;">
+            Quando sei pronto, premi “Inizia”.
+          </div>
+          <div class="actions">
+            <button class="btn primary" id="startBtn">Inizia</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-inner" id="screenQuiz" style="display:none;">
+        <h1 id="qTitle">Domanda</h1>
+        <p class="qtext" id="qText"></p>
+        <p class="sub" id="qSub"></p>
+
+        <div class="choices" id="choices"></div>
+
+        <div class="footer">
+          <div class="result" id="resultBox"></div>
+          <div class="actions">
+            <button class="btn primary" id="nextBtn" disabled>Prossima domanda</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-inner end" id="screenEnd">
+        <h1>Quiz completato</h1>
+        <div class="hr"></div>
+        <div class="score" id="finalScore">€ 0</div>
+        <div class="hint">Punteggio totalizzato (saldo finale)</div>
+      </div>
+    </section>
+  </div>
+
+<script>
+  // --- Testo intro (pari pari dal file) ---
+  const INTRO_TEXT =
+`L’esperimento è un gioco di decisioni: stai per lanciare la tua attività e, passo dopo passo, dovrai scegliere come muoverti. Ogni scelta ha una probabilità di successo: potresti guadagnare… oppure perdere.
+Il tuo obiettivo è uno solo: arrivare a 5.000€ e comprarti la casa dei tuoi sogni.
+Ma attenzione, se il tuo saldo scende sotto -1.000€, il gioco finisce e perdi. `;
+
+  // Helper formattazione saldo (con segno)
+  function formatEuro(n){
+    const sign = n < 0 ? "-" : "";
+    const abs = Math.abs(Math.round(n));
+    // separatore migliaia stile IT
+    const s = abs.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return `${sign}€ ${s}`;
+  }
+
+  // --- DOM ---
+  const saldoLabel = document.getElementById("saldoLabel");
+  const progressLabel = document.getElementById("progressLabel");
+
+  const screenDemo = document.getElementById("screenDemo");   // ✅ nuovo
+  const screenIntro = document.getElementById("screenIntro");
+  const screenQuiz  = document.getElementById("screenQuiz");
+  const screenEnd   = document.getElementById("screenEnd");
+
+  const introText = document.getElementById("introText");
+  const startBtn  = document.getElementById("startBtn");
+
+  const qTitle = document.getElementById("qTitle");
+  const qText  = document.getElementById("qText");
+  const qSub   = document.getElementById("qSub");
+
+  const choicesBox = document.getElementById("choices");
+  const resultBox  = document.getElementById("resultBox");
+  const nextBtn    = document.getElementById("nextBtn");
+
+  const card = document.getElementById("card");
+  const confetti = document.getElementById("confetti");
+  const finalScore = document.getElementById("finalScore");
+
+  // ✅ Demografica
+  const demoNextBtn = document.getElementById("demoNextBtn");
+  const demoHint = document.getElementById("demoHint");
+  const demoState = { gender: null, age: null, edu: null };
+
+  introText.textContent = INTRO_TEXT;
+
+  // --- Stato ---
+  let saldo = 0;
+  let idx = -1;
+  let locked = false;
+
+// --- Raccolta dati (tesi) ---
+const sessionId = (crypto && crypto.randomUUID)
+  ? crypto.randomUUID()
+  : String(Date.now()) + "-" + Math.random().toString(16).slice(2);
+
+const answersLog = [];
+let demoData = { gender: null, age: null, edu: null };
+
+const SAVE_ENDPOINT = "https://script.google.com/macros/s/AKfycbw-Nv7S6u8Sh7SvHLlTbZldAV7TBqXwacJcc_lhXjE_dS8gE5AuVPNmQAvzGHujosC3/exec";
+
+async function sendSubmission(payload){
+  try{
+    await fetch(SAVE_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  }catch(err){
+    console.error("Invio dati fallito:", err);
+  }
+}
+
+  // --- Dati quiz (testi pari pari; VA nascosto rimuovendo la parte "(VA ...)" solo dai prompt) ---
+  // Nota: nella domanda con [SALDO]/[Saldo] il testo viene sostituito a runtime.
+  const quiz = [
+    {
+      prompt: "Devi decidere dove istituire la tua attività economica, scegli di farlo:",
+      options: [
+        { text: " in campagna. Le prospettive di crescita sono basse ma ben compensate da un forte legame che si potrebbe creare con i cittadini del paese (probabilità di successo 80%: guadagno 875; -1000 ",
+          p: 0.80, win: 875, lose: -1000
+        },
+        { text: " In una città di piccole dimensioni, in cui la domanda del tuo prodotto non è ancora del tutto satura. (prob. di successo 70%: 1400; -1600)",
+          p: 0.70, win: 1400, lose: -1600
+        },
+        { text: "In una grande città. I potenziali clienti sono molto numerosi, il problema… anche la concorrenza lo è. E’ necessario trovare un prodotto innovativo (probabilità di successo 50%: 4000; -3000)",
+          p: 0.50, win: 4000, lose: -3000
+        }
+      ]
+    },
+    {
+      prompt: "L’andamento dell’azienda è strettamente legato alla gestione di essa, devi decidere chi sarà ad amministrarla.",
+      options: [
+        { text: "Fai tutto da solo per risparmiare, ma la gestione è più difficile del previsto (prob di successo 20%: 3900; -600)",
+          p: 0.20, win: 3900, lose: -600
+        },
+        { text: "Punti su giovani motivati, nella maggior parte dei casi portano buoni risultati, ma l’inesperienza a volte costa caro (prob di successo 60%: 1300; -1200)",
+          p: 0.60, win: 1300, lose: -1200
+        },
+        { text: "Investi in professionisti esperti, quasi sempre garantiscono stabilità e profitto ( prob di successo 90%: 500; -1500",
+          p: 0.90, win: 500, lose: -1500
+        }
+      ]
+    },
+    {
+      prompt: "Devi decidere se accettare una scommessa con un tuo dipendente, si tira una moneta se esce testa vinci.",
+      options: [
+        { text: "Rifiuti (prob di successo 100%, 0)",
+          p: 1.00, win: 0, lose: 0
+        },
+        { text: "Accetti (prob di successo 50: 200;-200) ",
+          p: 0.50, win: 200, lose: -200
+        }
+      ]
+    },
+    {
+      prompt: "Devi trovare dei clienti, punti a:",
+      options: [
+        { text: "Clienti abituali e fidelizzati: Ti rivolgi a una clientela stabile e conosciuta: nella maggior parte dei casi ottieni guadagni regolari, raramente ci sono cali della domanda e se ci dovessero essere sono comunque contenuti. (prob di successo 80%: 775; -100)",
+          p: 0.80, win: 775, lose: -100
+        },
+        { text: "Nuovi segmenti in crescita: punti su clienti emergenti e nuove esigenze, spesso il mercato risponde bene, ma se l’interesse non decolla la perdita può essere rilevante. (prob di successo 75%:1000; -600)",
+          p: 0.75, win: 1000, lose: -600
+        },
+        { text: "Clientela esclusiva e di nicchia: ti rivolgi a pochi clienti di fascia alta: puoi ottenere profitti molto elevati, ma il rischio di una forte perdita è concreto. (prob di successo 60%: 1600; -900)",
+          p: 0.60, win: 1600, lose: -900
+        }
+      ]
+    },
+    {
+      prompt: "L’azienda sta attraversando una grave crisi finanziaria e devi decidere come affrontare il problema:",
+      options: [
+        { text: "Riduci il personale e i costi operativi al minimo. Limiti le perdite, ma raramente riesci a rilanciare davvero l’azienda.  (prob. di successo 25%:      -300; -700)",
+          p: 0.25, win: -300, lose: -700
+        },
+        { text: " Investi in un nuovo prodotto sperando di rilanciare il mercato. Si riesce a stabilizzare le perdite, ma se non viene accolto bene esse aumentano sensibilmente. (prob. di successo 25% 0; -800)",
+          p: 0.25, win: 0, lose: -800
+        },
+        { text: "Espansione aggressiva all’estero: Apri rapidamente nuove sedi internazionali. Se funziona, recuperi molto terreno; ma nella maggior parte dei casi i costi iniziali e la concorrenza portano a forti perdite. (prob di successo 25%: 600; -1000) ",
+          p: 0.25, win: 600, lose: -1000
+        }
+      ]
+    },
+    {
+      prompt: "Devi scegliere la tipologia di prodotto:",
+      options: [
+        { text: "a) Scegli di lanciare una linea di alta gioielleria artigianale, Richiede un investimento iniziale molto elevato. In caso di successo può generare profitti elevati, ma se il mercato non apprezza il prodotto le perdite sarebbero significative.( (prob di successo 40%: 5500; -2500)",
+          p: 0.40, win: 5500, lose: -2500
+        },
+        { text: "Scegli di lanciare una lampada smart con funzionalità innovative rispetto allo standard. Serve un investimento maggiore in sviluppo e marketing. In caso di successo i profitti sono più alti, ma un fallimento comporta una perdita. (prob di successo 40%: 3250; -1000)",
+          p: 0.40, win: 3250, lose: -1000
+        },
+        { text: "Scegli di lanciare una borraccia termica con design semplice, prodotta in piccoli lotti.\nL’investimento iniziale è contenuto. Se il prodotto ha successo, il guadagno è moderato; se fallisce, non vai in perdita, visti i costi molto bassi. (prob di successo 40%: 1750;0)",
+          p: 0.40, win: 1750, lose: 0
+        }
+      ]
+    },
+    {
+      prompt: "Devi decidere dove destinare il tuo capitale:",
+      options: [
+        { text: "Titoli di Stato: rendimento contenuto ma elevata sicurezza. (Prob di successo 80%: +500;-500) ",
+          p: 0.80, win: 500, lose: -500
+        },
+        { text: "Fondo di investimento innovativo, buone prospettive, ma il mercato può essere imprevedibile. (Prob. di successo 50%:1500; -800) ",
+          p: 0.50, win: 1500, lose: -800
+        },
+        { text: "Startup ad alto potenziale: guadagni molto elevati possibili, ma rischio significativo. (Prob di  successo 40%: 3000; -1500)",
+          p: 0.40, win: 3000, lose: -1500
+        }
+      ]
+    },
+    {
+      prompt: "L’azienda sta perdendo visibilità sul mercato e devi decidere se (e come) adottare un piano di marketing.",
+      options: [
+        { text: "Ti convinci che “se il prodotto è buono, si vende da solo”. Niente campagne, niente consulenti, solo passa parola (prob di successo 30%: 1000; 0)",
+          p: 0.30, win: 1000, lose: 0
+        },
+        { text: "Decidi di investire in pubblicità online: post sponsorizzati, qualche influencer locale e un po’ di creatività. Spesso funziona, ma il pubblico ha l’attenzione di un pesce rosso e basta poco per bruciare il budget. (prob di successo 50%: 1600,-1000)",
+          p: 0.50, win: 1600, lose: -1000
+        },
+        { text: "Ti senti audace: TV, radio, cartelloni, influencer con milioni di follower. Se va bene fai il botto, se va male fai… il botto, ma in senso finanziario (prob di successo 75%: 1800;      -4200)",
+          p: 0.75, win: 1800, lose: -4200
+        }
+      ]
+    },
+    {
+      prompt: "Stai guardando il tuo conto corrente, hai [SALDO], devi decidere se:",
+      options: [
+        { text: "Provare ad aumentarlo (prob di successo 50%: [Saldo] +200;[Saldo]-200)",
+          p: 0.50, win: 200, lose: -200,
+        },
+        { text: "Lasciarlo cosi com’è ( [Saldo] )",
+          p: 1.00, win: 0, lose: 0
+        }
+      ],
+      framingSaldo: true
+    },
+    {
+      prompt: "L’azienda ha perso il suo principale cliente e si trova in forte difficoltà commerciale. Devi decidere come reagire:",
+      options: [
+        { text: "Elimini le linee meno redditizie e concentri le risorse sui prodotti più solidi. Spesso riesci a contenere i danni, ma raramente torni a crescere nel breve periodo. (prob di successo 75%:0, -3200)",
+          p: 0.75, win: 0, lose: -3200
+        },
+        { text: "Cerchi una partnership con un’azienda più grande per condividere mercato e costi. Se l’accordo funziona stabilizzi la situazione, ma se fallisce perdi tempo e risorse.  (prob di successo 20%:0;-1000)",
+          p: 0.20, win: 0, lose: -1000
+        },
+        { text: "Investi molto in comunicazione e rebranding per riconquistare quote di mercato. Se il mercato risponde bene puoi rilanciare fortemente con il vantaggio di avere maggiore indipendenza (prob di successo 60%: 0;-2000)",
+          p: 0.60, win: 0, lose: -2000
+        }
+      ]
+    },
+    {
+      prompt: "L’azienda ha accumulato liquidità negli ultimi anni e deve decidere come investirla per favorire la crescita futura:",
+      options: [
+        { text: "Decidi di modernizzare i processi produttivi e gestionali attraverso nuove tecnologie.\nSe l’integrazione è efficace, si ottiene un forte incremento di produttività e margini; se l’implementazione è più lenta del previsto, i benefici arrivano in modo graduale ma comunque stabile. (prob. di successo 25%:2900;500)",
+          p: 0.25, win: 2900, lose: 500
+        },
+        { text: "investi in formazione avanzata, leadership e innovazione interna.\nSe il cambiamento culturale attecchisce pienamente, si ottiene un miglioramento significativo delle performance e della capacità innovativa; se i risultati sono più graduali, si consolida comunque un ambiente più efficiente e competitivo nel lungo periodo. (prob di successo 75%:1300;500)",
+          p: 0.75, win: 1300, lose: 500
+        },
+        { text: "L’azienda decide di non investire, conservando il denaro per eventuali esigenze (1000)",
+          p: 1.00, win: 1000, lose: 1000
+        }
+      ]
+    },
+    {
+      prompt: " Quale scelta è economicamente più vantaggiosa (l’esito non verrà conteggiato nel saldo finale):",
+      options: [
+        { text: "Aprire una banca che presta solo soldi del Monopoli (prob. di successo 90%: 1500,-1500)",
+          p: 0.90, win: 1500, lose: -1500
+        },
+        { text: "Lasciare il personale a casa e automatizzare il processo decisionale affidandolo al lancio dei dadi. (prob di successo 60%: 1800; -450)",
+          p: 0.60, win: 1800, lose: -450
+        },
+        { text: "Realizzare uno spot TV da 12 ore per forgiare la resistenza mentale del pubblico (prob di successo 30%: (4500; -500)",
+          p: 0.30, win: 4500, lose: -500
+        }
+      ],
+      dontCount: true
+    }
+  ];
+
+  function updateSaldoUI(){
+    saldoLabel.textContent = formatEuro(saldo);
+  }
+
+  function stripVAFromPrompt(s){
+    // nel documento il VA sta in coda tipo " ... (VA:500)" oppure "(VA 0)".
+    return s.replace(/\s*\(VA[^)]*\)\s*$/,"").trimEnd();
+  }
+
+  function injectSaldoPlaceholders(s){
+    // Sostituisce [SALDO] e [Saldo] col saldo corrente (VISIBILE, ma non conteggiato due volte)
+    const val = formatEuro(saldo);
+    return s.replace(/\[SALDO\]/g, val).replace(/\[Saldo\]/g, val);
+  }
+
+  function clearResult(){
+    resultBox.style.display = "none";
+    resultBox.className = "result";
+    resultBox.textContent = "";
+  }
+
+  function lockChoices(lock){
+    locked = lock;
+    const btns = choicesBox.querySelectorAll("button.choice");
+    btns.forEach(b => b.disabled = lock);
+  }
+
+  function runFX(kind){
+    // kind: "good" | "bad" | "warn"
+    card.classList.remove("flash-good","flash-bad","shake","pop");
+    void card.offsetWidth; // reflow to restart animations
+
+    if(kind === "good"){
+      card.classList.add("flash-good","pop");
+      spawnDots();
+    } else if(kind === "bad"){
+      card.classList.add("flash-bad","shake");
+      spawnDots(true);
+    } else {
+      card.classList.add("pop");
+      spawnDots(false, true);
+    }
+  }
+
+  function spawnDots(isBad=false, isWarn=false){
+    confetti.innerHTML = "";
+    const dots = 18;
+    for(let i=0;i<dots;i++){
+      const d = document.createElement("div");
+      d.className="dot";
+      const left = Math.random()*100;
+      const top = -10 - Math.random()*40;
+      const delay = Math.random()*80;
+      const size = 6 + Math.random()*8;
+      d.style.left = left+"%";
+      d.style.top = top+"px";
+      d.style.width = size+"px";
+      d.style.height = size+"px";
+      const hue = isBad ? (340 + Math.random()*20) : isWarn ? (45 + Math.random()*25) : (135 + Math.random()*70);
+      d.style.background = `hsl(${hue} 85% 60%)`;
+      d.style.animationDelay = delay+"ms";
+      confetti.appendChild(d);
+    }
+  }
+
+  function showQuestion(){
+    clearResult();
+    nextBtn.disabled = true;
+
+   if(idx >= quiz.length){
+  screenQuiz.style.display = "none";
+  screenEnd.style.display = "block";
+  progressLabel.textContent = `Fine`;
+  finalScore.textContent = formatEuro(saldo);
+
+  // invio finale (anagrafica + scelte + saldo)
+  sendSubmission({
+    type: "complete",
+    sessionId,
+    demo: demoData,
+    finalSaldo: saldo,
+    answers: answersLog,
+    completedAt: new Date().toISOString()
+  });
+
+  return;
+}
+
+    const q = quiz[idx];
+    progressLabel.textContent = `Domanda ${idx+1} / ${quiz.length}`;
+
+    qTitle.textContent = "Domanda";
+    const prompt = stripVAFromPrompt(q.prompt);
+    qText.textContent = q.framingSaldo ? injectSaldoPlaceholders(prompt) : prompt;
+
+    let sub = "";
+    if(q.dontCount){
+      sub = "Nota: l’esito di questa domanda non verrà conteggiato nel saldo.";
+    } else {
+      sub = "Scegli un’opzione. L’esito verrà determinato in base alla probabilità indicata.";
+    }
+    qSub.textContent = sub;
+
+    choicesBox.innerHTML = "";
+    q.options.forEach((opt, optIndex) => {
+      const b = document.createElement("button");
+      b.className = "choice";
+      b.type = "button";
+      b.textContent = q.framingSaldo ? injectSaldoPlaceholders(opt.text) : opt.text;
+      b.addEventListener("click", () => onChoose(optIndex));
+      choicesBox.appendChild(b);
+    });
+
+    lockChoices(false);
+  }
+
+  function onChoose(optIndex){
+    if(locked) return;
+
+    const q = quiz[idx];
+    const opt = q.options[optIndex];
+
+    lockChoices(true);
+
+    const r = Math.random();
+    const success = r < opt.p;
+
+    const delta = success ? opt.win : opt.lose;
+
+// salva la scelta (per la tesi)
+answersLog.push({
+  sessionId,
+  questionIndex: idx,
+  optionIndex: optIndex,
+  p: opt.p,
+  success,
+  delta,
+  saldoBefore: saldo,
+  at: new Date().toISOString()
+});
+
+    if(!q.dontCount){
+      saldo += delta;
+      updateSaldoUI();
+    }
+
+    const esito = success ? "SUCCESSO" : "INSUCCESSO";
+
+    let msg = `Esito: ${esito}\n`;
+    msg += `Probabilità: ${Math.round(opt.p*100)}%\n`;
+    if(delta !== 0){
+      msg += `Variazione: ${delta > 0 ? "+" : ""}${formatEuro(delta).replace("€ -", "-€ ")}\n`;
+    } else {
+      msg += `Variazione: ${formatEuro(0)}\n`;
+    }
+
+    if(!q.dontCount){
+      msg += `Saldo attuale: ${formatEuro(saldo)}\n`;
+    } else {
+      msg += `Saldo attuale (invariato): ${formatEuro(saldo)}\n`;
+    }
+
+    resultBox.textContent = msg;
+    resultBox.style.display = "block";
+
+    resultBox.className = "result " + (q.dontCount ? "warn" : (delta >= 0 ? "good" : "bad"));
+    runFX(q.dontCount ? "warn" : (delta >= 0 ? "good" : "bad"));
+
+    nextBtn.disabled = false;
+    nextBtn.focus();
+  }
+
+  // ✅ Gestione schermata demografica
+  function updateDemoUI(){
+    const ok = !!demoState.gender && !!demoState.age && !!demoState.edu;
+    demoNextBtn.disabled = !ok;
+    demoHint.textContent = ok
+      ? "Perfetto! Premi “Continua”."
+      : "Seleziona una risposta per ogni domanda per continuare.";
+  }
+
+  // evidenzia selezione (riuso stile senza aggiungere CSS extra)
+  function markSelected(group, value){
+    const buttons = screenDemo.querySelectorAll(`button[data-demo="${group}"]`);
+    buttons.forEach(b => {
+      const selected = b.getAttribute("data-value") === value;
+      b.style.borderColor = selected ? "rgba(122,162,255,.55)" : "rgba(255,255,255,.12)";
+      b.style.background = selected ? "rgba(122,162,255,.12)" : "rgba(15,27,51,.55)";
+    });
+  }
+
+  screenDemo.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-demo]");
+    if(!btn) return;
+
+    const group = btn.getAttribute("data-demo");
+    const value = btn.getAttribute("data-value");
+
+    demoState[group] = value;
+    markSelected(group, value);
+    updateDemoUI();
+  });
+
+  demoNextBtn.addEventListener("click", () => {
+  // salva anagrafica
+  demoData = { ...demoState };
+
+  // invia evento "start" al database
+  sendSubmission({
+    type: "start",
+    sessionId,
+    demo: demoData,
+    startedAt: new Date().toISOString()
+  });
+
+  screenDemo.style.display = "none";
+  screenIntro.style.display = "block";
+  progressLabel.textContent = "Intro";
+});
+
+  // --- Eventi ---
+  startBtn.addEventListener("click", () => {
+    screenIntro.style.display = "none";
+    screenQuiz.style.display = "block";
+    idx = 0;
+    updateSaldoUI();
+    showQuestion();
+  });
+
+  nextBtn.addEventListener("click", () => {
+    idx += 1;
+    showQuestion();
+  });
+
+  // init
+  updateSaldoUI();
+  updateDemoUI();
+  progressLabel.textContent = "Domande iniziali";
+</script>
+</body>
+</html>
